@@ -1,0 +1,59 @@
+{
+  "project_info": {
+    "project_number": "1001613077253",
+    "firebase_url": "https://masterscience-app.firebaseio.com",
+    "project_id": "masterscience-app",
+    "storage_bucket": "masterscience-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1001613077253:android:2b1cbc596a536766",
+        "android_client_info": {
+          "package_name": "com.example.mark.ms"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1001613077253-2vd4u7gkhchis1k1p00u0ftabo0qhggd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mark.ms",
+            "certificate_hash": "e7ef8cedf3411dac37d18a52259c884c0fe7d172"
+          }
+        },
+        {
+          "client_id": "1001613077253-mvfsbepf6tk39ib6ijq82131ne5lv6ok.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "1001613077253-mvfsbepf6tk39ib6ijq82131ne5lv6ok.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmYN0UgB8XieRlqoFhzWKldhJsAcbEzD8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1001613077253-mvfsbepf6tk39ib6ijq82131ne5lv6ok.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

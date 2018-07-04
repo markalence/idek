@@ -1,0 +1,29 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="drawerArrowStyle">@style/DrawerIcon</item>
+    </style>
+
+
+
+    <style name="MS" parent="Theme.AppCompat.NoActionBar" />
+    <style name="Base.Widget.AppCompat.DrawerArrowToggle." parent="Base.ThemeOverlay.AppCompat.Dark"/>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="DrawerIcon" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="color">@android:color/white</item>
+    </style>
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="BackButon" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+    <item name="android:colorControlNormal">@color/colorPrimary</item>
+</style>
+
+</resources>
