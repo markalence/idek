@@ -33,10 +33,10 @@ public class SessionActivity extends AppCompatActivity {
     private ArrayList<HashMap<String, Object>> sessionItems;
     RecyclerView recyclerView;
 
-    public static String STUDENTS = "students";
-    public static String UPCOMING_SESSIONS = "upcomingsessions";
-    static String HOURS = "hours";
-    static String DATE = "date";
+    private String STUDENTS = "students";
+    private String UPCOMING_SESSIONS = "upcomingsessions";
+    private String HOURS = "hours";
+    private String DATE = "date";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +67,7 @@ public class SessionActivity extends AppCompatActivity {
 
                         System.out.println(doc.getData());
                         HashMap<String, Object> map = new HashMap<String, Object>();
-                        map.put(HOURS, doc.get(HOURS).toString());
+                        map.put(HOURS, doc.get(HOURS));
                         map.put(DATE, doc.getDate(DATE));
                         sessionItems.add(map);
 

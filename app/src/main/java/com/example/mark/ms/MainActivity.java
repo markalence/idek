@@ -46,6 +46,7 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.Source;
@@ -67,7 +68,7 @@ import javax.annotation.Nullable;
 
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     static TextView date;
     static TextView hours;
@@ -76,9 +77,14 @@ public class MainActivity extends AppCompatActivity
     TextView nameView;
     TextView gradeView;
 
-    static String HOURS = "hours";
-    static String STUDENTS = "students";
-    static String UPCOMING_SESSIONS = "upcomingsessions";
+    private String HOURS = "hours";
+    private String STUDENTS = "students";
+    private String UPCOMING_SESSIONS = "upcomingsessions";
+    private String RECORD_SHEET = "recordsheet";
+    private String DATE = "date";
+    private String MODULE = "module";
+    private String COMMENT = "comment";
+    private String DATE_FORMAT = "dd/MM/yy";
 
     //--------time and date picker info--------
     int day, month, year, hour, minute;
@@ -114,8 +120,6 @@ public class MainActivity extends AppCompatActivity
         comment = findViewById(R.id.module);
 
 
-
-
     }
 
     //params - none
@@ -123,8 +127,13 @@ public class MainActivity extends AppCompatActivity
 
     public void getData() {
 
-        firestore.collection("students").document("grahams").
-                collection("recordsheet").get(Source.SERVER).addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+
+
+        firestore.collection(STUDENTS).document(Login.username)
+                .collection(RECORD_SHEET)
+                .orderBy(DATE, Query.Direction.DESCENDING)
+                .get(Source.SERVER)
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
 
@@ -135,12 +144,12 @@ public class MainActivity extends AppCompatActivity
 
 
                         HashMap<String, String> map = new HashMap<String, String>();
-                        map.put("hours", doc.get("hours").toString());
-                        SimpleDateFormat sfd = new SimpleDateFormat("dd/MM/yy");
-                        Date dateRecord = doc.getDate("date");
-                        map.put("date", sfd.format(dateRecord).toString());
-                        map.put("module", doc.get("module").toString());
-                        map.put("comment", doc.get("comment").toString());
+                        map.put(HOURS, doc.get(HOURS).toString());
+                        SimpleDateFormat sfd = new SimpleDateFormat(DATE_FORMAT);
+                        Date dateRecord = doc.getDate(DATE);
+                        map.put(DATE, sfd.format(dateRecord).toString());
+                        map.put(MODULE, doc.get(MODULE).toString());
+                        map.put(COMMENT, doc.get(COMMENT).toString());
                         recordItems.add(map);
 
 
@@ -159,7 +168,6 @@ public class MainActivity extends AppCompatActivity
         });
 
 
-
     }
 
 
@@ -168,7 +176,7 @@ public class MainActivity extends AppCompatActivity
 
         System.out.println(findViewById(R.id.recordSheet));
         recyclerView = findViewById(R.id.recordSheet);
-         rsa = new recordSheetAdapter(getBaseContext(), recordItems);
+        rsa = new recordSheetAdapter(getBaseContext(), recordItems);
         recyclerView.setAdapter(rsa);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -244,9 +252,18 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
         } else if (id == R.id.book) {
 
-            makeBooking();
+            BookingPicker bookingPicker = new BookingPicker(this, this.getLayoutInflater());
+            bookingPicker.makeBooking();
 
-        } else if (id == R.id.student_profile) {
+        }
+
+        else if(id == R.id.record){
+
+            BookingRecorder bookingRecorder = new BookingRecorder(this,this.getLayoutInflater());
+            bookingRecorder.recordBooking();
+
+        }
+        else if (id == R.id.student_profile) {
 
         } else if (id == R.id.contact) {
 
@@ -256,171 +273,5 @@ public class MainActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
-
-
-    public void makeBooking() {
-
-        Calendar calendar = Calendar.getInstance();
-        year = calendar.get(Calendar.YEAR);
-        month = calendar.get(Calendar.MONTH);
-        day = calendar.get(Calendar.DAY_OF_MONTH);
-
-        DatePickerDialog datePickerDialog = new DatePickerDialog(MainActivity.this, MainActivity.this, year, month, day);
-        datePickerDialog.show();
-
-    }
-
-
-    @Override
-    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-
-        yearFinal = year;
-        monthFinal = month;
-        dayFinal = dayOfMonth;
-        Calendar calendar = Calendar.getInstance();
-        hour = calendar.get(Calendar.HOUR_OF_DAY);
-
-        TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this, MainActivity.this,
-                hour, minute, android.text.format.DateFormat.is24HourFormat(this));
-
-        timePickerDialog.show();
-
-
-
-
-    }
-
-    @Override
-    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-
-        hourFinal = hourOfDay;
-        minuteFinal = minute;
-
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.YEAR, yearFinal);
-        cal.set(Calendar.MONTH, monthFinal);
-        cal.set(Calendar.DAY_OF_MONTH, dayFinal);
-        cal.set(Calendar.HOUR_OF_DAY, hourFinal);
-        cal.set(Calendar.MINUTE, minuteFinal);
-        cal.set(Calendar.SECOND,0);
-        cal.set(Calendar.MILLISECOND,0);
-
-        Date date = cal.getTime();
-        System.out.println(cal.getTime() + " HELLO OWEN");
-        Timestamp ts = new Timestamp(date);
-        dateExists(ts);
-        docData.put("date",ts);
-        numberPickerInit();
-
-
-        }
-
-
-        public void dateExists(final Timestamp timestamp){
-
-            firestore.collection(STUDENTS).document(Login.username).collection(UPCOMING_SESSIONS)
-                    .get(Source.SERVER)
-                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                               @Override
-                                               public void onComplete(@NonNull Task<QuerySnapshot> task) {
-
-
-
-                                                   if(task.isSuccessful()){
-
-                                                       for(DocumentSnapshot doc : task.getResult()){
-
-                                                        Date date = (Date) doc.get("date");
-                                                        Date date1 = timestamp.toDate();
-
-                                                           SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd");
-                                                           if(fmt.format(date1).equals(fmt.format(date))){
-
-
-                                                               Toast.makeText(getBaseContext(),"You already have a session on this day!", Toast.LENGTH_SHORT).show();
-                                                               docData.clear();
-                                                               makeBooking();
-                                                               break;
-                                                           }
-
-                                                       }
-
-                                                   }
-
-                                               }
-                                           }
-                    );
-
-        }
-
-        public void numberPickerInit(){
-
-
-            final AlertDialog.Builder d = new AlertDialog.Builder(MainActivity.this);
-            LayoutInflater inflater = this.getLayoutInflater();
-            View dialogView = inflater.inflate(R.layout.booking_hours, null);
-            d.setView(dialogView);
-
-
-            //number picker starts at 1 and increments by 0.5 up until 6
-            final NumberPicker numberPicker = (NumberPicker) dialogView.findViewById(R.id.numberPicker);
-            numberPicker.setMaxValue(10);
-            numberPicker.setMinValue(0);
-            numberPicker.setWrapSelectorWheel(false);
-
-
-            //filling the number picker with the correct values
-            int pos = 0;
-
-            for(double i = 1;i<=6;i+=0.5){
-
-                values[pos]=String.valueOf(i).replace(".0","");
-                ++pos;
-
-            }
-
-            numberPicker.setDisplayedValues(values);
-
-            //when a number is selected, insert it into docData to be written to server
-
-            numberPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-                @Override
-                public void onValueChange(NumberPicker numberPicker, int oldValue, int newValue) {
-
-                    if(docData.containsKey(HOURS)){
-
-                        docData.remove(HOURS);
-                        docData.put(HOURS,values[newValue]);
-
-                    }
-
-                    else {docData.put(HOURS,values[newValue]);}
-                }
-
-
-            });
-
-
-            d.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-
-               firestore.collection(STUDENTS).document(Login.username).collection(UPCOMING_SESSIONS).add(docData);
-                }
-            });
-
-            d.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-
-                }
-            });
-
-            d.create().show();
-
-
-        }
-
-
 
 }

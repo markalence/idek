@@ -26,10 +26,10 @@ public class Login extends AppCompatActivity {
     public static String lastName;
     public static String password;
     public static String grade;
-    static String FIRST_NAME = "firstName";
-    static String LAST_NAME = "lastName";
-    static String STUDENTS = "students";
-    static String GRADE = "grade";
+    private static String FIRST_NAME = "firstName";
+    private static String LAST_NAME = "lastName";
+    private static String STUDENTS = "students";
+    private static String GRADE = "grade";
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 

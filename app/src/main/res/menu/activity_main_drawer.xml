@@ -3,16 +3,29 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/sessions"
-            android:icon="@drawable/ic_calender"
-            android:title="Upcoming Sessions" />
+    <item android:title="Schedule">
+        <menu>
+            <item
+                android:id="@+id/sessions"
+                android:icon="@drawable/ic_calender"
+                android:title="Upcoming Sessions" />
+            <item
+                android:id="@+id/book"
+                android:icon="@drawable/ic_add_circle_black_24dp"
+                android:title="Book a Session"/>
 
-        <item
-            android:id="@+id/book"
-            android:icon="@drawable/ic_add_circle_black_24dp"
-            android:title="Book a Session"/>
+            <item
+                android:id="@+id/record"
+                android:icon="@drawable/ic_assignment_turned_in_black_24dp"
+                android:title="Record a Session"
+                />
+
+        </menu>
+    </item>
+
+    <group android:checkableBehavior="single">
+
+
 
         <item
             android:id="@+id/student_profile"
