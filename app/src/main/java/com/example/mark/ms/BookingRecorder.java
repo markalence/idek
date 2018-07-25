@@ -19,11 +19,14 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.Source;
 
+import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -39,8 +42,9 @@ public class BookingRecorder implements DatePickerDialog.OnDateSetListener, Time
     private LayoutInflater mInflater;
     private FirebaseFirestore firestore = FirebaseFirestore.getInstance();
 
-    private String[] values = new String[11];
-    private NumberPicker numberPicker;
+    private String[] values;
+    {values = new String[]{"1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5", "5.5", "6"};}
+
 
 
     private String HOURS = "hours";
@@ -53,6 +57,9 @@ public class BookingRecorder implements DatePickerDialog.OnDateSetListener, Time
     private String USERNAME = "username";
     private String PENDING_RECORDSHEETS = "pendingrecordsheets";
     private String DATE_FORMAT = "yyyyMMdd";
+    private String SCHEDULE = "schedule";
+    private String DATE = "date";
+
     private HashMap<String, Object> docData = new HashMap<>();
 
     BookingRecorder(Context context, LayoutInflater inflater) {
@@ -66,7 +73,7 @@ public class BookingRecorder implements DatePickerDialog.OnDateSetListener, Time
         mDatePickerDialog = new DatePickerDialog(mContext, BookingRecorder.this, year, month, day);
         mTimePickerDialog = new TimePickerDialog(mContext, BookingRecorder.this, hour, minute, android.text.format.DateFormat.is24HourFormat(mContext));
         mInflater = inflater;
-        docData.put(HOURS,1);
+        docData.put(HOURS, 1);
     }
 
     public void recordBooking() {
@@ -109,8 +116,6 @@ public class BookingRecorder implements DatePickerDialog.OnDateSetListener, Time
         Timestamp ts = new Timestamp(date);
         //checks if student has a session on that day - forces them back to the date picker if they do. If they don't, do nothing
         dateExists(ts);
-        docData.put("date", ts);
-        numberPickerInit();
 
 
     }
@@ -118,53 +123,66 @@ public class BookingRecorder implements DatePickerDialog.OnDateSetListener, Time
 
     public void dateExists(final Timestamp timestamp) {
 
-        firestore.collection(STUDENTS).document(Login.username).collection(RECORDED_SESSIONS)
-                .get(Source.SERVER)
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                           @Override
-                                           public void onComplete(@NonNull Task<QuerySnapshot> task) {
+        CollectionReference recordedSessions = firestore.collection(RECORDED_SESSIONS);
+        Query recordedSessionsQuery = recordedSessions
+                .whereEqualTo(USERNAME,Login.username);
 
+        recordedSessionsQuery.get(Source.SERVER).addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
 
-                                               if (task.isSuccessful()) {
+                if(task.isSuccessful()){
 
-                                                   for (DocumentSnapshot doc : task.getResult()) {
+                    for(DocumentSnapshot doc : task.getResult()){
 
-                                                       Date date = (Date) doc.get("date");
-                                                       Date date1 = timestamp.toDate();
+                        Date date = (Date) doc.get(DATE);
+                        Date date1 = timestamp.toDate();
 
-                                                       SimpleDateFormat fmt = new SimpleDateFormat(DATE_FORMAT);
-                                                       if (fmt.format(date1).equals(fmt.format(date))) {
+                        SimpleDateFormat fmt = new SimpleDateFormat(DATE_FORMAT);
+                        if (fmt.format(date1).equals(fmt.format(date))) {
 
+                            Toast.makeText(mContext, "You already recorded a session on this day!", Toast.LENGTH_SHORT).show();
+                            mTimePickerDialog.dismiss();
+                            mDatePickerDialog.dismiss();
+                            docData.clear();
+                            recordBooking();
+                            break;
+                        }
 
-                                                           Toast.makeText(mContext, "You already recorded a session on this day!", Toast.LENGTH_SHORT).show();
-                                                           mTimePickerDialog.dismiss();
-                                                           docData.clear();
-                                                           recordBooking();
-                                                           break;
-                                                       }
+                    }
 
-                                                   }
+                    System.out.println("HERE WE GO...");
+                    docData.put(DATE, timestamp);
+                    numberPickerInit();
 
-                                               }
+                }
 
-                                           }
-                                       }
-                );
+            }
+        });
+
 
     }
 
     public void numberPickerInit() {
 
 
-        final AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        final AlertDialog.Builder bookingBuilder = new AlertDialog.Builder(mContext);
         View dialogView = mInflater.inflate(R.layout.booking_hours, null);
-        builder.setView(dialogView);
+        bookingBuilder.setView(dialogView);
         setNumberPicker(dialogView);
-        final AlertDialog hourPicker = builder.create();
-        hourPicker.show();
-
+        final AlertDialog hourPicker = bookingBuilder.create();
         final Button hourCancel = dialogView.findViewById(R.id.hourCancel);
         Button hourConfirm = dialogView.findViewById(R.id.hourConfirm);
+        hourPicker.show();
+
+        AlertDialog.Builder moduleBuilder = new AlertDialog.Builder(mContext);
+        View moduleView = mInflater.inflate(R.layout.module_recorder, null);
+        moduleBuilder.setView(moduleView);
+        final EditText et = (EditText) moduleView.findViewById(R.id.moduleRecord);
+        final Button moduleCancel = (Button) moduleView.findViewById(R.id.moduleCancel);
+        final Button moduleConfirm = (Button) moduleView.findViewById(R.id.moduleConfirm);
+        final AlertDialog moduleDialog = moduleBuilder.create();
+
 
         hourCancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -178,14 +196,6 @@ public class BookingRecorder implements DatePickerDialog.OnDateSetListener, Time
             public void onClick(View v) {
 
                 hourPicker.dismiss();
-                AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-                View moduleView = mInflater.inflate(R.layout.module_recorder, null);
-                builder.setView(moduleView);
-                final EditText et = (EditText) moduleView.findViewById(R.id.moduleRecord);
-                Button moduleCancel = (Button) moduleView.findViewById(R.id.moduleCancel);
-                Button moduleConfirm = (Button) moduleView.findViewById(R.id.moduleConfirm);
-                final AlertDialog moduleDialog = builder.create();
-
 
                 moduleCancel.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -200,15 +210,33 @@ public class BookingRecorder implements DatePickerDialog.OnDateSetListener, Time
                     @Override
                     public void onClick(View v) {
 
-                        firestore.collection(STUDENTS).document(Login.username).collection(RECORDED_SESSIONS).add(docData);
                         docData.put(FIRST_NAME, Login.firstName);
                         docData.put(LAST_NAME, Login.lastName);
                         docData.put(MODULE, et.getText().toString());
-                        docData.put(USERNAME,Login.username);
+                        docData.put(USERNAME, Login.username);
+
+                        firestore.collection(RECORDED_SESSIONS).add(docData);
                         firestore.collection(PENDING_RECORDSHEETS).add(docData);
+
+                        Query deleteScheduleItem = firestore.collection(SCHEDULE)
+                                .whereEqualTo(USERNAME, Login.username);
+
+                        deleteScheduleItem.get(Source.SERVER)
+                                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+
+                                        if (task.isSuccessful()) {
+
+                                        updateSchedule();
+
+                                        }
+
+                                    }
+                                });
+
                         moduleDialog.dismiss();
                         Toast.makeText(mContext, "Thank you! Session has been recorded.", Toast.LENGTH_SHORT).show();
-                        moduleDialog.dismiss();
 
                     }
                 });
@@ -218,50 +246,58 @@ public class BookingRecorder implements DatePickerDialog.OnDateSetListener, Time
         });
 
 
-
-
-
     }
 
     public void setNumberPicker(View dialogView) {
 
-        //number picker starts at 1 and increments by 0.5 up until 6
-        final NumberPicker numberPicker = (NumberPicker) dialogView.findViewById(R.id.numberPicker);
-        numberPicker.setMaxValue(10);
+        final NumberPicker numberPicker = dialogView.findViewById(R.id.numberPicker);
         numberPicker.setMinValue(0);
+        numberPicker.setMaxValue(10);
         numberPicker.setWrapSelectorWheel(false);
-
-
-        //filling the number picker with the correct values
-        int pos = 0;
-
-        for (double i = 1; i <= 6; i += 0.5) {
-
-            values[pos] = String.valueOf(i).replace(".0", "");
-            ++pos;
-
-        }
-
         numberPicker.setDisplayedValues(values);
 
         //when a number is selected, insert it into docData to be written to server
-
         numberPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker numberPicker, int oldValue, int newValue) {
 
-                if (docData.containsKey(HOURS)) {
+                docData.put(HOURS, values[newValue]);
 
-                    docData.remove(HOURS);
-                    docData.put(HOURS, values[newValue]);
-
-                } else {
-                    docData.put(HOURS, values[newValue]);
-                }
             }
 
-
         });
+
+
+    }
+
+    //removing schedule item when a booking for the day has been recorded
+    public void updateSchedule() {
+
+        Query deleteScheduleItem = firestore.collection(SCHEDULE)
+                .whereEqualTo(USERNAME, Login.username);
+
+        deleteScheduleItem.get(Source.SERVER)
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+
+                        if (task.isSuccessful()) {
+
+                            final SimpleDateFormat sfd = new SimpleDateFormat(DATE_FORMAT);
+                            for (DocumentSnapshot doc : task.getResult()) {
+
+                                Date scheduledDate = doc.getTimestamp(DATE).toDate();
+                                Timestamp recordedTimestamp = (Timestamp) docData.get(DATE);
+                                Date recordedDate = recordedTimestamp.toDate();
+
+                                if (sfd.format(scheduledDate).equals(sfd.format(recordedDate))) {
+                                    firestore.collection(SCHEDULE).document(doc.getId()).delete();
+                                }
+
+                            }
+                        }
+                    }
+                });
 
 
     }

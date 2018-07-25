@@ -78,13 +78,13 @@ public class MainActivity extends AppCompatActivity
     TextView gradeView;
 
     private String HOURS = "hours";
-    private String STUDENTS = "students";
-    private String UPCOMING_SESSIONS = "upcomingsessions";
-    private String RECORD_SHEET = "recordsheet";
+    private String USERNAME = "username";
+    private String RECORD_SHEETS = "recordsheets";
     private String DATE = "date";
     private String MODULE = "module";
     private String COMMENT = "comment";
     private String DATE_FORMAT = "dd/MM/yy";
+
 
     //--------time and date picker info--------
     int day, month, year, hour, minute;
@@ -129,8 +129,8 @@ public class MainActivity extends AppCompatActivity
 
 
 
-        firestore.collection(STUDENTS).document(Login.username)
-                .collection(RECORD_SHEET)
+        firestore.collection(RECORD_SHEETS)
+                .whereEqualTo(USERNAME, Login.username)
                 .orderBy(DATE, Query.Direction.DESCENDING)
                 .get(Source.SERVER)
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity
                     for (DocumentSnapshot doc : task.getResult()) {
 
 
-                        HashMap<String, String> map = new HashMap<String, String>();
+                        HashMap<String, String> map = new HashMap<>();
                         map.put(HOURS, doc.get(HOURS).toString());
                         SimpleDateFormat sfd = new SimpleDateFormat(DATE_FORMAT);
                         Date dateRecord = doc.getDate(DATE);
@@ -159,6 +159,7 @@ public class MainActivity extends AppCompatActivity
                     rsa.notifyDataSetChanged();
 
                 } else {
+                    Log.d("BAD",task.getException().toString());
                     Toast.makeText(getBaseContext(), "Couldn't connect", Toast.LENGTH_SHORT).show();
                 }
 

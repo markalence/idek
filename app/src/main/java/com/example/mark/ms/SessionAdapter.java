@@ -29,7 +29,7 @@ import java.util.HashMap;
 
 public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHolder> {
 
-    ArrayList<HashMap<String,Object>> mDataset;
+    ArrayList<HashMap<String, Object>> mDataset;
     Context mContext;
     FirebaseFirestore firestore = FirebaseFirestore.getInstance();
 
@@ -42,14 +42,15 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
     private String SCHEDULE = "schedule";
     private String FIRST_NAME = "firstName";
     private String LAST_NAME = "lastName";
+    private String USERNAME = "username";
+    private String TODAYSCHEDULE = "todayschedule";
+    SimpleDateFormat sfd = new SimpleDateFormat(DATE_FORMAT);
 
-    public SessionAdapter(Context context, ArrayList<HashMap<String,Object>> myDataset) {
+
+    public SessionAdapter(Context context, ArrayList<HashMap<String, Object>> myDataset) {
         mDataset = myDataset;
-        mContext=context;
-
-
+        mContext = context;
     }
-
 
     @NonNull
     @Override
@@ -66,16 +67,14 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
 
 
         //collection references for in case a session is deleted
-        final CollectionReference collectionReference= firestore.collection(STUDENTS).document(Login.username).
-                collection(UPCOMING_SESSIONS);
+        final CollectionReference scheduleReference = firestore.collection(SCHEDULE);
 
         holder.sessionHours.setText(mDataset.get(position).get(HOURS).toString());
 
-        SimpleDateFormat sfd = new SimpleDateFormat(DATE_FORMAT);
         SimpleDateFormat hourFormat = new SimpleDateFormat(HOUR_FORMAT);
-        final Date dateRecord = (Date) mDataset.get(position).get(DATE);
-        final Timestamp timestamp = new Timestamp(dateRecord);
-        holder.sessionDate.setText(sfd.format(dateRecord).toString() + " at " + hourFormat.format(dateRecord));
+        final Timestamp timestamp = (Timestamp)mDataset.get(position).get(DATE);
+        final Date dateRecord = timestamp.toDate();
+        holder.sessionDate.setText(sfd.format(dateRecord) + " at " + hourFormat.format(dateRecord));
 
 
         //deletes a session if cancel button is clicked
@@ -84,84 +83,65 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
             @Override
             public void onClick(View v) {
 
-                System.out.println(mDataset.get(position).get(HOURS) + "       " + mDataset.get(position).get(DATE));
-                System.out.println( mDataset.get(position).get(DATE) + " ???? " + timestamp.toString());
+                Date today = new Date();
 
-                Query querybig = collectionReference;
+                if(sfd.format(today).equals(sfd.format(dateRecord))){
 
-                querybig.get(Source.SERVER).addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    Query todaySchedule = firestore.collection(TODAYSCHEDULE)
+                            .whereEqualTo(USERNAME, Login.username)
+                            .whereEqualTo(HOURS,mDataset.get(position).get(HOURS))
+                            .whereEqualTo(DATE, dateRecord);
+
+                    todaySchedule.get(Source.SERVER)
+                            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+
+                                    if(task.isSuccessful()){
+
+                                        for(DocumentSnapshot doc : task.getResult()){
+
+                                            firestore.collection(TODAYSCHEDULE)
+                                                    .document(doc.getId())
+                                                    .delete();
+                                        }
+                                    }
+
+                                }
+                            });
+                }
+
+
+                Query querySessions = scheduleReference
+                        .whereEqualTo(HOURS, mDataset.get(position).get(HOURS))
+                        .whereEqualTo(DATE, dateRecord)
+                        .whereEqualTo(USERNAME, Login.username);
+
+                querySessions.get(Source.SERVER).addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        for(DocumentSnapshot doc : task.getResult()){
 
-                            System.out.println(doc.getTimestamp(DATE)+ " " + timestamp);
+                        if (task.isSuccessful()) {
+                            for (final DocumentSnapshot doc : task.getResult()) {
 
+                                scheduleReference.document(doc.getId()).delete();
+                                Toast.makeText(mContext, "Session canceled", Toast.LENGTH_SHORT).show();
 
+                                mDataset.remove(position);
+                                notifyDataSetChanged();
+
+                            }
+
+                        } else {
+                            Toast.makeText(mContext, "Error deleting session.", Toast.LENGTH_SHORT).show();
                         }
+
                     }
                 });
-
-               Query querysessions = collectionReference
-                       .whereEqualTo(HOURS,mDataset.get(position).get(HOURS))
-                       .whereEqualTo(DATE,dateRecord);
-
-               querysessions.get(Source.SERVER).addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                   @Override
-                   public void onComplete(@NonNull Task<QuerySnapshot> task) {
-
-                       if(task.isSuccessful()){
-                           for (final DocumentSnapshot sessiondoc : task.getResult()){
-                               System.out.println("WPPPPPPPPPPPPPPPPPPP");
-
-                               System.out.println(task.getResult().getDocuments());
-                               Query queryschedule = firestore.collection(SCHEDULE)
-                                       .whereEqualTo(DATE, timestamp)
-                                       .whereEqualTo(HOURS,mDataset.get(position).get(HOURS))
-                                       .whereEqualTo(FIRST_NAME, Login.firstName)
-                                       .whereEqualTo(LAST_NAME, Login.lastName);
-
-
-                               queryschedule.get(Source.SERVER).addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                   @Override
-                                   public void onComplete(@NonNull Task<QuerySnapshot> task) {
-
-                                       if(task.isSuccessful()){
-                                           for(DocumentSnapshot doc : task.getResult()){
-                                               System.out.println("Dickhead");
-                                               //System.out.println(sessiondoc.getData());
-                                               collectionReference.document(sessiondoc.getId()).delete();
-                                               firestore.collection(SCHEDULE).document(doc.getId()).delete();
-                                               Toast.makeText(mContext,"Session canceled",Toast.LENGTH_SHORT).show();
-
-
-                                           }
-
-                                       }
-
-
-                                   }
-                               });
-
-
-                               mDataset.remove(position);
-                               notifyDataSetChanged();
-
-                           }
-
-                       }
-
-                       else {Toast.makeText(mContext,"Shit buddy",Toast.LENGTH_SHORT).show();}
-
-                   }
-               });
-
 
 
             }
         });
-
-
-
 
 
     }
