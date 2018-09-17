@@ -1,0 +1,199 @@
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sessionConstraintLayout"
+    android:layout_width="match_parent"
+    android:theme="@style/Platform.AppCompat.Light"
+    android:background="@android:color/white"
+    android:layout_height="match_parent"
+    >
+
+    <android.support.design.widget.AppBarLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        >
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:theme="@style/AppTheme"
+
+            >
+
+            <TextView
+                android:id="@+id/toolbar_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="My Profile"
+                android:textColor="#FFF"
+                android:textSize="20dp"
+                android:textStyle="bold" />
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="My cell:"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/studentCell"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appBarLayout" />
+
+    <EditText
+        android:id="@+id/studentCell"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_marginTop="8dp"
+        android:ems="10"
+        android:focusable="false"
+        android:inputType="phone"
+        app:layout_constraintStart_toStartOf="@+id/fatherCell"
+        app:layout_constraintTop_toBottomOf="@+id/appBarLayout" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:textStyle="bold"
+        android:text="Father cell"
+        android:focusable="false"
+
+        app:layout_constraintBottom_toBottomOf="@+id/fatherCell"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/fatherCell" />
+
+    <EditText
+        android:id="@+id/fatherCell"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ems="10"
+
+        android:focusable="false"
+        android:inputType="number"
+        app:layout_constraintStart_toStartOf="@+id/motherCell"
+        app:layout_constraintTop_toBottomOf="@+id/studentCell" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Mother cell"
+        android:focusable="false"
+
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/motherCell"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fatherCell" />
+
+    <EditText
+        android:id="@+id/motherCell"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+
+        android:ems="10"
+        android:focusable="false"
+        android:inputType="phone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/textView4"
+        app:layout_constraintTop_toBottomOf="@+id/fatherCell" />
+
+    <EditText
+        android:id="@+id/homeNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ems="10"
+        android:focusable="false"
+
+        android:inputType="phone"
+        app:layout_constraintStart_toStartOf="@+id/motherCell"
+        app:layout_constraintTop_toBottomOf="@+id/motherCell" />
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="8dp"
+        android:text="Home"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/homeNumber"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/homeNumber" />
+
+    <TextView
+        android:id="@+id/textView6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Email:"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/email"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/email" />
+
+    <EditText
+        android:id="@+id/email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ems="10"
+
+        android:focusable="false"
+        android:inputType="textEmailAddress"
+        app:layout_constraintStart_toStartOf="@+id/homeNumber"
+        app:layout_constraintTop_toBottomOf="@+id/homeNumber" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="0dp"
+        android:text="DAYS:"
+        android:paddingBottom="0dp"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/email" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/profileRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="2dp"
+        android:paddingTop="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
+
+</android.support.constraint.ConstraintLayout>

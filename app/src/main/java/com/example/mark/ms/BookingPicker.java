@@ -6,13 +6,17 @@ import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.NumberPicker;
+import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -35,58 +39,54 @@ import java.util.HashMap;
 
 public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
 
-    int year, month, day, hour, minute;
-    int yearFinal, monthFinal, dayFinal, hourFinal, minuteFinal;
-    Context mContext;
-    DatePickerDialog mDatePickerDialog;
-    TimePickerDialog mTimePickerDialog;
-    LayoutInflater mInflater;
-    FirebaseFirestore firestore = FirebaseFirestore.getInstance();
-    NumberPicker numberPicker;
+    private int year, month, day;
+    private int yearFinal, monthFinal, dayFinal, hourFinal, minuteFinal;
+    private Context mContext;
+    private DatePickerDialog mDatePickerDialog;
+    private TimePickerDialog mTimePickerDialog;
+    private LayoutInflater mInflater;
+    private FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+    private Toast instruction;
+    private AlertDialog.Builder builder;
+    private View dialogView;
+    private AlertDialog alertDialog = null;
+    private boolean bookingOnSameDay = false;
+    private static HashMap<String, Object> docData = new HashMap<>();
+    private final SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd");
+    private Resources r;
 
-
-    private String[] values;
-
-    {
-        values = new String[]{"1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5", "5.5", "6"};
-    }
-
-
-    private String HOURS = "hours";
-    private String STUDENTS = "students";
-    private String UPCOMING_SESSIONS = "upcomingsessions";
-    private String DATE_FORMAT = "yyyyMMdd";
-    private String DATE = "date";
-    private String SCHEDULE = "schedule";
-    private String FIRST_NAME = "firstName";
-    private String LAST_NAME = "lastName";
-    private String USERNAME = "username";
-    private String TODAYSCHEDULE = "todayschedule";
-
-    static HashMap<String, Object> docData = new HashMap<>();
-    final SimpleDateFormat fmt = new SimpleDateFormat(DATE_FORMAT);
 
     BookingPicker(Context context, LayoutInflater inflater) {
 
         Calendar calendar = Calendar.getInstance();
-
         year = calendar.get(Calendar.YEAR);
         month = calendar.get(Calendar.MONTH);
         day = calendar.get(Calendar.DAY_OF_MONTH);
-        hour = calendar.get(Calendar.HOUR_OF_DAY);
-        minute = calendar.get(Calendar.MINUTE);
         mContext = context;
-        mDatePickerDialog = new DatePickerDialog(mContext, BookingPicker.this, year, month, day);
-        mTimePickerDialog = new TimePickerDialog(mContext, BookingPicker.this, hour, minute, android.text.format.DateFormat.is24HourFormat(mContext));
         mInflater = inflater;
+        dialogView = mInflater.inflate(R.layout.booking_hours, null);
+        builder = new AlertDialog.Builder(mContext);
+        builder.setView(dialogView);
+        alertDialog = builder.create();
+        instruction = Toast.makeText(mContext, "Choose the date of the session", Toast.LENGTH_SHORT);
+        instruction.setGravity(Gravity.BOTTOM | Gravity.CENTER, 0, 0);
+        r = mContext.getResources();
+
+        mDatePickerDialog = new DatePickerDialog(mContext,
+                R.style.CustomDialogTheme,
+                BookingPicker.this,
+                year, month, day);
+
+        mTimePickerDialog = new TimePickerDialog(mContext, R.style.CustomDialogTheme,
+                BookingPicker.this,
+                14, 0,
+                false);
     }
 
     public void makeBooking() {
-
         mDatePickerDialog.show();
-
+        instruction.show();
     }
-
 
     @Override
     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
@@ -95,10 +95,13 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
         monthFinal = month;
         dayFinal = dayOfMonth;
         Calendar calendar = Calendar.getInstance();
-        hour = calendar.get(Calendar.HOUR_OF_DAY);
-        mTimePickerDialog.show();
-
-
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.MONTH, month);
+        calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+        Date date = calendar.getTime();
+        Timestamp bookingTimestamp = new Timestamp(date);
+        bookingOnSameDay = false;
+        checkDateExists(bookingTimestamp);
     }
 
     @Override
@@ -115,104 +118,50 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
         cal.set(Calendar.MINUTE, minuteFinal);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
-
-        Date date = cal.getTime();
-        Timestamp timestamp = new Timestamp(date);
-        //checks if student has a session on that day - forces them back to the date picker if they do. If they don't, do nothing
-        checkDateExists(timestamp);
-
-
+        Date bookingDate = cal.getTime();
+        Timestamp bookingTimestamp = new Timestamp(bookingDate);
+        docData.put(r.getString(R.string.DATE), bookingTimestamp);
+        numberPickerInit();
     }
 
 
     public void checkDateExists(final Timestamp timestamp) {
 
-        CollectionReference scheduleReference = firestore.collection(SCHEDULE);
-
-        Query scheduleQuery = scheduleReference
-                .whereEqualTo(USERNAME, Login.username);
-
-
         final Date calenderDate = timestamp.toDate(); // date being booked
 
-        scheduleQuery.get(Source.SERVER).addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                boolean bookingOnSameDay = false;
-                if (task.isSuccessful()) {
-
-                    for (DocumentSnapshot doc : task.getResult()) {
-
-                        Timestamp sessionTimestamp = doc.getTimestamp(DATE);
-                        Date sessionDate = sessionTimestamp.toDate(); //date being checked
-
-                        if (fmt.format(sessionDate).equals(fmt.format(calenderDate))) {
-                            bookingOnSameDay = true;
-                        }
-
-
-                    }
-
-                    if (bookingOnSameDay) {
-                        Toast.makeText(mContext, "You already have a session on this day!", Toast.LENGTH_SHORT).show();
-                        docData.clear();
-                        mDatePickerDialog.dismiss();
-                        makeBooking();
-                    } else {
-                        docData.put(DATE, timestamp);
-                        numberPickerInit();
-                    }
-
-                }
-
+        for (HashMap<String, Object> doc : Login.upcomingSessions) {
+            Timestamp sessionTimestamp = (Timestamp) doc.get(r.getString(R.string.DATE));
+            Date sessionDate = sessionTimestamp.toDate(); //date being checked
+            if (fmt.format(sessionDate).equals(fmt.format(calenderDate))) {
+                Toast.makeText(mContext, "You already have a session on this day!", Toast.LENGTH_SHORT).show();
+                bookingOnSameDay = true;
+                docData.clear();
+                mTimePickerDialog.dismiss();
+                mDatePickerDialog.show();
+                break;
             }
-        });
-
-
+        }
+        if (!bookingOnSameDay) {
+            mTimePickerDialog.show();
+            instruction.setText("Choose start time of session");
+            instruction.show();
+        }
     }
 
-    public void numberPickerInit() {
+    private void numberPickerInit() {
 
-
-        final AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-        View dialogView = mInflater.inflate(R.layout.booking_hours, null);
-        builder.setView(dialogView);
-        final AlertDialog alertDialog = builder.create();
-
-        Button confirm = (Button) dialogView.findViewById(R.id.hourConfirm);
-        Button cancel = (Button) dialogView.findViewById(R.id.hourCancel);
+        Button confirm = dialogView.findViewById(R.id.hourConfirm);
+        Button cancel = dialogView.findViewById(R.id.hourCancel);
 
         confirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                docData.put(FIRST_NAME, Login.firstName);
-                docData.put(LAST_NAME, Login.lastName);
-                docData.put(USERNAME, Login.username);
-
-                Date today = new Date();
-                Timestamp bookingTimestamp = (Timestamp) docData.get(DATE);
-                Date bookingDate = bookingTimestamp.toDate();
-
-                if(fmt.format(today).equals(fmt.format(bookingDate))) {
-
-                    firestore.collection(TODAYSCHEDULE).add(docData);
-                }
-
-
-                firestore.collection(SCHEDULE).add(docData).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
-                    @Override
-                    public void onComplete(@NonNull Task<DocumentReference> task) {
-
-                        if (task.isSuccessful()) {
-                            docData.clear();
-                            alertDialog.dismiss();
-                        }
-
-                    }
-                });
-
-
+                alertDialog.dismiss();
+                docData.put(r.getString(R.string.FIRST_NAME), Login.firstName);
+                docData.put(r.getString(R.string.LAST_NAME), Login.lastName);
+                docData.put(r.getString(R.string.USERNAME), Login.username);
+                uploadToSchedule();
             }
         });
 
@@ -224,34 +173,47 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
             }
         });
 
-        docData.put(HOURS, 1);
-
-
-        //number picker starts at 1 and increments by 0.5 up until 6
+        docData.put(r.getString(R.string.HOURS), 1);
         final NumberPicker numberPicker = (NumberPicker) dialogView.findViewById(R.id.numberPicker);
         numberPicker.setMinValue(0);
         numberPicker.setMaxValue(10);
-        numberPicker.setWrapSelectorWheel(false);
-
-
-        numberPicker.setDisplayedValues(values);
-
-        //when a number is selected, insert it into docData to be written to server
-
+        numberPicker.setWrapSelectorWheel(true);
+        numberPicker.setDisplayedValues(r.getStringArray(R.array.hourArray));
         numberPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker numberPicker, int oldValue, int newValue) {
-
-                docData.put(HOURS, values[newValue]);
-
+                docData.put(r.getString(R.string.HOURS), r.getStringArray(R.array.hourArray)[newValue]);
             }
 
-
         });
-
         alertDialog.show();
-
+        instruction.cancel();
+        instruction.setText("Choose the number of hours of your session");
+        instruction.show();
     }
 
+    private void uploadToSchedule() {
 
+        Timestamp existing;
+        Timestamp booking = (Timestamp) docData.get(r.getString(R.string.DATE));
+
+        for (int i = 0; i < Login.upcomingSessions.size(); ++i) {
+            existing = (Timestamp) Login.upcomingSessions.get(i).get(r.getString(R.string.DATE));
+            if (existing.compareTo(booking) > 0) {
+                Login.upcomingSessions.add(i, (HashMap<String, Object>) docData.clone());
+                break;
+            }
+        }
+        firestore.collection(r.getString(R.string.SCHEDULE)).add(docData).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentReference> task) {
+                if (task.isSuccessful()) {
+                    docData.clear();
+                    Toast.makeText(mContext, "Session booked!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(mContext, "Couldn't book a session at this time.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
 }
