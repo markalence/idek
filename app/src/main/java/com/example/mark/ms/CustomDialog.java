@@ -1,15 +1,11 @@
 package com.example.mark.ms;
 
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
 
-import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
 
 public class CustomDialog extends Dialog {
 

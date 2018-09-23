@@ -3,6 +3,7 @@ package com.example.mark.ms;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -44,30 +45,23 @@ public class Login extends AppCompatActivity {
     public static String lastName;
     public static String password;
     public static String grade;
-    private String FIRST_NAME = "firstName";
-    private String LAST_NAME = "lastName";
-    private String STUDENTS = "students";
-    private String GRADE = "grade";
-    private String USERNAME = "username";
-    private String DATE = "date";
-    private String RECORD_SHEETS = "recordsheets";
-    private String SCHEDULE = "schedule";
-    private boolean sessionsLoaded = false;
-    private boolean recordSheetLoaded = false;
+    public static ArrayList<HashMap<String, String>> userDays;
+    public static ArrayList<HashMap<String, String>> userContacts;
     public static ArrayList<HashMap<String, Object>> recordSheet;
     public static ArrayList<HashMap<String, Object>> upcomingSessions;
+    private boolean sessionsLoaded = false;
+    private boolean recordSheetLoaded = false;
+    private boolean daysLoaded = false;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
-    public static Dialog dateDialog;
-    public static View dateDialogView;
-    public static ConstraintLayout cl;
-
+    private Resources r;
 
     FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
 
         db = FirebaseFirestore.getInstance();
         FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
@@ -77,6 +71,7 @@ public class Login extends AppCompatActivity {
         db.setFirestoreSettings(settings);
 
 
+        r = getBaseContext().getResources();
         setContentView(R.layout.login_loading);
         ProgressBar progressBar = findViewById(R.id.progress);
         WanderingCubes wc = new WanderingCubes();
@@ -93,10 +88,10 @@ public class Login extends AppCompatActivity {
 
             try {
                 JSONObject j = new JSONObject(userData);
-                firstName = j.getString(FIRST_NAME);
-                lastName = j.getString(LAST_NAME);
-                grade = j.getString(GRADE);
-                username = j.getString(USERNAME);
+                firstName = j.getString(r.getString(R.string.FIRST_NAME));
+                lastName = j.getString(r.getString(R.string.LAST_NAME));
+                grade = j.getString(r.getString(R.string.GRADE));
+                username = j.getString(r.getString(R.string.USERNAME));
                 getData();
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -111,33 +106,35 @@ public class Login extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         Button button = (Button) findViewById(R.id.loginbutton);
 
+
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EditText usernameText = (EditText) findViewById(R.id.username);
-                EditText passwordText = (EditText) findViewById(R.id.password);
+                EditText usernameText = findViewById(R.id.username);
+                EditText passwordText = findViewById(R.id.password);
                 username = (usernameText.getText()).toString();
                 password = ((Character) username.charAt(username.length() - 1)).toString();
+                setContentView(R.layout.login_loading);
 
                 if (password.equals(password)) {
 
-                    DocumentReference docRef = db.collection(STUDENTS).document(username);
+                    DocumentReference docRef = db.collection(r.getString(R.string.STUDENTS)).document(username);
                     docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                         @Override
                         public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                             if (task.isSuccessful()) {
                                 DocumentSnapshot document = task.getResult();
                                 if (document.exists()) {
-                                    firstName = document.get(FIRST_NAME).toString();
-                                    lastName = document.get(LAST_NAME).toString();
-                                    grade = document.get(GRADE).toString();
+                                    firstName = document.get(r.getString(R.string.FIRST_NAME)).toString();
+                                    lastName = document.get(r.getString(R.string.LAST_NAME)).toString();
+                                    grade = document.get(r.getString(R.string.GRADE)).toString();
 
                                     JSONObject j = new JSONObject();
                                     try {
-                                        j.put(FIRST_NAME, firstName);
-                                        j.put(LAST_NAME, lastName);
-                                        j.put(GRADE, grade);
-                                        j.put(USERNAME, username);
+                                        j.put(r.getString(R.string.FIRST_NAME), firstName);
+                                        j.put(r.getString(R.string.LAST_NAME), lastName);
+                                        j.put(r.getString(R.string.GRADE), grade);
+                                        j.put(r.getString(R.string.USERNAME), username);
                                         mEditor.putString("userData", j.toString());
                                         mEditor.commit();
                                         getData();
@@ -161,10 +158,11 @@ public class Login extends AppCompatActivity {
 
         recordSheet = new ArrayList<>();
         upcomingSessions = new ArrayList<>();
+        userDays = new ArrayList<>();
 
-        db.collection(RECORD_SHEETS)
-                .whereEqualTo(USERNAME, username)
-                .orderBy(DATE, Query.Direction.DESCENDING)
+        db.collection(r.getString(R.string.RECORDSHEETS))
+                .whereEqualTo(r.getString(R.string.USERNAME), username)
+                .orderBy(r.getString(R.string.DATE), Query.Direction.DESCENDING)
                 .get(Source.SERVER)
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -174,7 +172,7 @@ public class Login extends AppCompatActivity {
                                 recordSheet.add((HashMap<String, Object>) doc.getData());
                             }
                             recordSheetLoaded = true;
-                            if (sessionsLoaded && recordSheetLoaded) {
+                            if (sessionsLoaded && recordSheetLoaded && daysLoaded) {
                                 finish();
                                 Intent intent = new Intent(Login.this, MainActivity.class);
                                 startActivity(intent);
@@ -187,24 +185,24 @@ public class Login extends AppCompatActivity {
                     }
                 });
 
-        db.collection(SCHEDULE)
-                .whereEqualTo(USERNAME, Login.username)
-                .orderBy(DATE, Query.Direction.ASCENDING)
+        db.collection(r.getString(R.string.SCHEDULE))
+                .whereEqualTo(r.getString(R.string.USERNAME), Login.username)
+                .orderBy(r.getString(R.string.DATE), Query.Direction.ASCENDING)
                 .get(Source.SERVER).addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if (task.isSuccessful()) {
 
                     for (DocumentSnapshot doc : task.getResult()) {
-                        upcomingSessions.add((HashMap<String, Object>) doc.getData());
+                        HashMap<String,Object> info = (HashMap<String, Object>) doc.getData();
+                        info.put("id",doc.getId());
+                        upcomingSessions.add(info);
                     }
                     sessionsLoaded = true;
-                    if (sessionsLoaded && recordSheetLoaded) {
+                    if (sessionsLoaded && recordSheetLoaded && daysLoaded) {
                         Intent intent = new Intent(Login.this, MainActivity.class);
                         finish();
                         startActivity(intent);
-                        System.out.println("SCHEDULE SUCCESS  " + upcomingSessions);
-
                     }
                 } else {
                     Toast.makeText(getBaseContext(), "Could not connect", Toast.LENGTH_SHORT).show();
@@ -213,5 +211,28 @@ public class Login extends AppCompatActivity {
             }
         });
 
+        db.collection(r.getString(R.string.STUDENTS))
+                .document(username)
+                .get(Source.SERVER)
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            userDays = new ArrayList<>();
+                            for(HashMap map : (ArrayList<HashMap<String,String>>)task.getResult().get("days")){
+                                userDays.add((HashMap<String, String>)map);
+                            }
+
+                            userContacts = (ArrayList<HashMap<String, String>>) task.getResult().get("contacts");
+
+                            daysLoaded = true;
+                            if (sessionsLoaded && recordSheetLoaded && daysLoaded) {
+                                Intent intent = new Intent(Login.this, MainActivity.class);
+                                finish();
+                                startActivity(intent);
+                            }
+                        }
+                    }
+                });
     }
 }

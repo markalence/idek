@@ -5,6 +5,7 @@ import android.app.DatePickerDialog;
 import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.TimePickerDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -31,6 +32,7 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.Source;
 
+import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -51,6 +53,7 @@ public class BookingRecorder implements OnDateSetListener {
     private AlertDialog recordDialog;
     private View pickerView;
     private Resources r;
+    private SimpleDateFormat sdf = new SimpleDateFormat("yy/mm/dd");
 
 
     private HashMap<String, Object> docData = new HashMap<>();
@@ -66,7 +69,17 @@ public class BookingRecorder implements OnDateSetListener {
         r = mContext.getResources();
         docData.put(r.getString(R.string.HOURS), "1");
 
-        mDatePickerDialog = new DatePickerDialog(mContext, R.style.CustomDialogTheme, BookingRecorder.this, year, month, day);
+        mDatePickerDialog = new DatePickerDialog(mContext,
+                R.style.CustomDialogTheme,
+                BookingRecorder.this,
+                year, month, day);
+
+        mDatePickerDialog.getDatePicker().setMaxDate(calendar.getTime().getTime());
+        calendar.add(Calendar.WEEK_OF_YEAR, -2);
+        Date twoWeeksPrior = calendar.getTime();
+        mDatePickerDialog.getDatePicker().setMinDate(twoWeeksPrior.getTime());
+        mDatePickerDialog.setTitle(null);
+
         pickerView = mInflater.inflate(R.layout.booking_hours, null);
 
         dateInstruction = Toast.makeText(mContext, "Choose the date of your session.", Toast.LENGTH_SHORT);
@@ -99,26 +112,34 @@ public class BookingRecorder implements OnDateSetListener {
             calendar.set(Calendar.HOUR_OF_DAY, 12);
             calendar.set(Calendar.MILLISECOND, 0);
             Timestamp timestamp = new Timestamp(calendar.getTime());
-            checkIfDateExists(timestamp);
+            checkDateIsValid(timestamp);
         }
     }
 
 
-    public void checkIfDateExists(final Timestamp timestamp) {
+    public void checkDateIsValid(final Timestamp timestamp) {
 
-
+        // TO DO LOAD RECORDED SESSIONS IN LOGIN ACTIVITY
         firestore.collection(r.getString(R.string.RECORDED_SESSIONS))
                 .whereEqualTo(r.getString(R.string.USERNAME), Login.username)
                 .get(Source.SERVER)
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful() && task.getResult().isEmpty()) {
-                            docData.put(r.getString(R.string.DATE), timestamp);
-                        } else {
-                            mDatePickerDialog.show();
-                            Toast.makeText(mContext, "Session already recorded on this day.", Toast.LENGTH_SHORT).show();
-                            recordDialog.dismiss();
+                        boolean bool = false;
+                        if (task.isSuccessful()) {
+                            for (DocumentSnapshot doc : task.getResult()) {
+                                if (sdf.format(doc.getDate(r.getString(R.string.DATE)))
+                                        .equals(sdf.format(timestamp.toDate()))) {
+                                    mDatePickerDialog.show();
+                                    Toast.makeText(mContext, "Session already recorded on this day.", Toast.LENGTH_SHORT).show();
+                                    recordDialog.dismiss();
+                                    bool = true;
+                                }
+                            }
+                            if (!bool) {
+                                docData.put(r.getString(R.string.DATE), timestamp);
+                            }
                         }
                     }
                 });

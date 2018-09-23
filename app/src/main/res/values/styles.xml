@@ -5,13 +5,18 @@
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorAccent">@color/colorPrimary</item>
         <item name="drawerArrowStyle">@style/DrawerIcon</item>
     </style>
 
     <style name="MS" parent="Theme.AppCompat.NoActionBar" />
-    <style name="Base.Widget.AppCompat.DrawerArrowToggle." parent="Base.ThemeOverlay.AppCompat.Dark"/>
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Base.Widget.AppCompat.DrawerArrowToggle." parent="Base.ThemeOverlay.AppCompat.Dark" />
+
+    <style name="AppTheme.AppBarOverlay" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowActionBar">false</item>
+        <item name = "android:windowNoTitle">true</item>
+    </style>
 
     <style name="AppTheme.Picker" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:textColorPrimary">@android:color/white</item>

@@ -42,13 +42,14 @@ public class SessionActivity extends AppCompatActivity {
     static ImageButton deleteButton;
     static Toolbar toolbar;
     static TextView toolbarTitle;
-    SessionSwipeController swipeController = new SessionSwipeController();
+    SessionSwipeController swipeController;
     static View sessionView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
+        swipeController =  new SessionSwipeController(this,getLayoutInflater());
         sessionItems.clear();
         sessionView = findViewById(android.R.id.content);
         deleteButton = findViewById(R.id.deleteButton);

@@ -51,6 +51,7 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
     private View dialogView;
     private AlertDialog alertDialog = null;
     private boolean bookingOnSameDay = false;
+    private boolean dialogCanceled = false;
     private static HashMap<String, Object> docData = new HashMap<>();
     private final SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd");
     private Resources r;
@@ -77,10 +78,36 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
                 BookingPicker.this,
                 year, month, day);
 
+        mDatePickerDialog.getDatePicker().setMinDate(calendar.getTime().getTime());
+        calendar.add(Calendar.MONTH,1);
+        mDatePickerDialog.getDatePicker().setMaxDate(calendar.getTime().getTime());
+        mDatePickerDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "CANCEL", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialogCanceled = true;
+                mDatePickerDialog.dismiss();
+                docData.clear();
+            }
+        });
+
+        mDatePickerDialog.setTitle(null);
+
+
         mTimePickerDialog = new TimePickerDialog(mContext, R.style.CustomDialogTheme,
                 BookingPicker.this,
                 14, 0,
                 false);
+
+
+        mTimePickerDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "CANCEL", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mTimePickerDialog.dismiss();
+                docData.clear();
+                dialogCanceled = true;
+            }
+        });
+
     }
 
     public void makeBooking() {
@@ -101,7 +128,7 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
         Date date = calendar.getTime();
         Timestamp bookingTimestamp = new Timestamp(date);
         bookingOnSameDay = false;
-        checkDateExists(bookingTimestamp);
+        checkDateIsValid(bookingTimestamp);
     }
 
     @Override
@@ -121,11 +148,15 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
         Date bookingDate = cal.getTime();
         Timestamp bookingTimestamp = new Timestamp(bookingDate);
         docData.put(r.getString(R.string.DATE), bookingTimestamp);
-        numberPickerInit();
+        if(!dialogCanceled){numberPickerInit();}
     }
 
 
-    public void checkDateExists(final Timestamp timestamp) {
+    public void checkDateIsValid(final Timestamp timestamp) {
+
+        Date todayDate = new Date();
+        Timestamp todayTimestamp = new Timestamp(todayDate);
+
 
         final Date calenderDate = timestamp.toDate(); // date being booked
 
@@ -141,8 +172,9 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
                 break;
             }
         }
-        if (!bookingOnSameDay) {
+        if (!bookingOnSameDay && !dialogCanceled) {
             mTimePickerDialog.show();
+            instruction.cancel();
             instruction.setText("Choose start time of session");
             instruction.show();
         }
@@ -174,9 +206,9 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
         });
 
         docData.put(r.getString(R.string.HOURS), 1);
-        final NumberPicker numberPicker = (NumberPicker) dialogView.findViewById(R.id.numberPicker);
+        final NumberPicker numberPicker = dialogView.findViewById(R.id.numberPicker);
         numberPicker.setMinValue(0);
-        numberPicker.setMaxValue(10);
+        numberPicker.setMaxValue(6);
         numberPicker.setWrapSelectorWheel(true);
         numberPicker.setDisplayedValues(r.getStringArray(R.array.hourArray));
         numberPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
@@ -199,8 +231,13 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
 
         for (int i = 0; i < Login.upcomingSessions.size(); ++i) {
             existing = (Timestamp) Login.upcomingSessions.get(i).get(r.getString(R.string.DATE));
-            if (existing.compareTo(booking) > 0) {
+            if (existing.getSeconds() > booking.getSeconds()) {
                 Login.upcomingSessions.add(i, (HashMap<String, Object>) docData.clone());
+                break;
+            }
+            System.out.println(i);
+            if(i==(Login.upcomingSessions.size()-1)){
+                Login.upcomingSessions.add((HashMap<String, Object>) docData.clone());
                 break;
             }
         }

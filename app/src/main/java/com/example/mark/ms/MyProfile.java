@@ -36,12 +36,12 @@ public class MyProfile extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_profile);
-        studentCell = findViewById(R.id.studentCell);
+        /*studentCell = findViewById(R.id.studentCell);
         fatherCell = findViewById(R.id.fatherCell);
         motherCell = findViewById(R.id.motherCell);
         homeNumber = findViewById(R.id.homeNumber);
         email = findViewById(R.id.email);
-        recyclerView = findViewById(R.id.profileRecyclerView);
+        recyclerView = findViewById(R.id.profileRecyclerView);*/
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
 

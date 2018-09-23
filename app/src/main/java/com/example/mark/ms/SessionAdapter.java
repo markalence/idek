@@ -55,19 +55,11 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
     private String DATE_FORMAT_LONG = "EEEE, MMMM dd";
     private String DATE_FORMAT_SHORT = "dd/MM";
     private String HOUR_FORMAT = "kk:mm";
-    private String UPCOMING_SESSIONS = "upcomingsessions";
-    private String STUDENTS = "students";
-    private String HOURS = "hours";
-    private String DATE = "date";
-    private String SCHEDULE = "schedule";
-    private String FIRST_NAME = "firstName";
-    private String LAST_NAME = "lastName";
-    private String USERNAME = "username";
-    private String TODAYSCHEDULE = "todayschedule";
     private ArrayList<HashMap<String, Object>> selectedItems;
     private ArrayList<HashMap<String, Object>> copyItems;
     private ArrayList<Integer> indexList;
     private ArrayList<HashMap<String,Object>> copyDataset;
+    Resources r;
     SimpleDateFormat simpleDateFormatLong = new SimpleDateFormat(DATE_FORMAT_LONG);
     SimpleDateFormat simpleDateFormatShort = new SimpleDateFormat(DATE_FORMAT_SHORT);
     boolean clickable;
@@ -79,6 +71,7 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
         selectedItems = new ArrayList<>();
         copyItems = new ArrayList<>();
         indexList = new ArrayList<>();
+        r = mContext.getResources();
 
         SessionActivity.deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,20 +95,17 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull final SessionAdapter.ViewHolder holder, final int position) {
 
-
-        //collection references for in case a session is deleted
         holder.side = "front";
         holder.sessionLayout.setBackgroundResource(R.drawable.bottomline);
         SimpleDateFormat hourFormat = new SimpleDateFormat(HOUR_FORMAT);
-        final Timestamp timestamp = (Timestamp) mDataset.get(position).get(DATE);
+        final Timestamp timestamp = (Timestamp) mDataset.get(position).get(r.getString(R.string.DATE));
         final Date dateRecord = timestamp.toDate();
         String dateStringLong = simpleDateFormatLong.format(dateRecord) + "\n" + hourFormat.format(dateRecord);
-        String hourString = mDataset.get(position).get(HOURS).toString() + " hours";
+        String hourString = mDataset.get(position).get(r.getString(R.string.HOURS)).toString() + " hours";
         holder.sessionInfo.setText(dateStringLong + " for " + hourString);
         holder.documentId = (String) mDataset.get(position).get("docId");
         final String dateStringShort = simpleDateFormatShort.format(dateRecord);
         showFrontOfDrawable(holder,position,dateStringShort);
-
 
         final TextDrawable drawableFront = TextDrawable.builder()
                 .beginConfig()
@@ -123,8 +113,6 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
                 .endConfig()
                 .buildRound(dateStringShort, ColorGenerator.MATERIAL.getRandomColor());
         drawableFront.setPadding(30, 30, 30, 30);
-
-        final Integer color = SessionActivity.toolbar.getDrawingCacheBackgroundColor();
 
         holder.imageView.setImageDrawable(drawableFront);
         holder.imageView.setOnClickListener(new View.OnClickListener() {
@@ -187,9 +175,9 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
         copyDataset = (ArrayList<HashMap<String,Object>>) mDataset.clone();
         for (int i = 0; i < selectedItems.size(); ++i) {
 
-            Query deleteQuery = firestore.collection("schedule")
-                    .whereEqualTo(USERNAME, selectedItems.get(i).get(USERNAME))
-                    .whereEqualTo(DATE, selectedItems.get(i).get(DATE));
+            Query deleteQuery = firestore.collection(r.getString(R.string.SCHEDULE))
+                    .whereEqualTo(r.getString(R.string.USERNAME), selectedItems.get(i).get(r.getString(R.string.USERNAME)))
+                    .whereEqualTo(r.getString(R.string.DATE), selectedItems.get(i).get(r.getString(R.string.DATE)));
 
             copyItems.add(selectedItems.get(i));
             int index = copyDataset.indexOf(selectedItems.get(i));
@@ -206,7 +194,7 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
                             if (task.isSuccessful()) {
 
                                 for (int i = 0; i<task.getResult().size();++i){
-                                    if(i==0){firestore.collection("schedule")
+                                    if(i==0){firestore.collection(r.getString(R.string.SCHEDULE))
                                         .document(task.getResult().getDocuments().get(0).getId())
                                     .delete();}
                                 }
@@ -234,7 +222,7 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
                     ArrayList<Integer> orderedList = (ArrayList<Integer>) indexList.clone();
                     Collections.sort(orderedList);
                     for (int i = 0; i < copyItems.size(); ++i) {
-                        firestore.collection(SCHEDULE)
+                        firestore.collection(r.getString(R.string.SCHEDULE))
                                 .add(copyItems.get(indexList.indexOf(orderedList.get(i))));
 
                         mDataset.add(orderedList.get(i), copyItems.get(indexList.indexOf(orderedList.get(i))));

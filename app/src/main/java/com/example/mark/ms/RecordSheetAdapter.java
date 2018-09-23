@@ -7,9 +7,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
+
 import com.google.firebase.Timestamp;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -55,30 +56,40 @@ public class RecordSheetAdapter extends RecyclerView.Adapter<RecordSheetAdapter.
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView hoursRecord;
         TextView dateRecord;
-        TextView textRecord;
+        TextView commentRecord;
+        TextView hoursRecord;
+        TextView moduleRecord;
 
         public ViewHolder(View v) {
             super(v);
             dateRecord = v.findViewById(R.id.dateRecord);
-            textRecord = v.findViewById(R.id.textRecord);
+            commentRecord = v.findViewById(R.id.commentRecord);
+            hoursRecord = v.findViewById(R.id.hoursRecord);
+            moduleRecord = v.findViewById(R.id.moduleRecord);
         }
 
         @SuppressLint("SetTextI18n")
-        public void setItem(HashMap<String,Object> item){
+        public void setItem(HashMap<String, Object> item) {
 
-            System.out.println(item);
-            this.textRecord.setText("Hours: " +
-                    item.get(r.getString(R.string.HOURS)).toString() +
-                    "\n" + "Module: " +
-                    item.get(r.getString(R.string.MODULE)).toString() +
-                    "\n" +"Comment: " +
+            this.moduleRecord.setText("Module: " +
+                            item.get(r.getString(R.string.MODULE)).toString());
+
+            this.commentRecord.setText("Comment: " +
                     item.get(r.getString(R.string.COMMENT)).toString());
 
+
+            String hours = item.get(r.getString(R.string.HOURS)).toString();
+            if (hours.equals("1")) {
+                hours += " hour";
+            } else {
+                hours += " hours";
+            }
+
+            hoursRecord.setText(hours);
             Timestamp timestamp = (Timestamp) item.get(r.getString(R.string.DATE));
             Date sessionDate = timestamp.toDate();
-            this.dateRecord.setText(sfd.format(sessionDate));
+            dateRecord.setText(sfd.format(sessionDate));
         }
     }
 
