@@ -76,10 +76,10 @@ public class MyProfileActivity extends AppCompatActivity {
 
             switch (position){
 
-                case 0: MyDaysFragment f1 = new MyDaysFragment();
+                case 0: ContactInfoFragment f1 = new ContactInfoFragment();
                     return f1;
 
-                case 1: ContactInfoFragment f2 = new ContactInfoFragment();
+                case 1: MyDaysFragment f2 = new MyDaysFragment();
                 return f2;
             }
 

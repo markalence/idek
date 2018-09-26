@@ -160,6 +160,10 @@ public class Login extends AppCompatActivity {
         upcomingSessions = new ArrayList<>();
         userDays = new ArrayList<>();
 
+        db.collection(r.getString(R.string.STUDENTS))
+                .document(username)
+                .update("deviceToken",mSharedPreferences.getString("deviceToken",null));
+
         db.collection(r.getString(R.string.RECORDSHEETS))
                 .whereEqualTo(r.getString(R.string.USERNAME), username)
                 .orderBy(r.getString(R.string.DATE), Query.Direction.DESCENDING)
@@ -194,8 +198,7 @@ public class Login extends AppCompatActivity {
                 if (task.isSuccessful()) {
 
                     for (DocumentSnapshot doc : task.getResult()) {
-                        HashMap<String,Object> info = (HashMap<String, Object>) doc.getData();
-                        info.put("id",doc.getId());
+                        HashMap<String, Object> info = (HashMap<String, Object>) doc.getData();
                         upcomingSessions.add(info);
                     }
                     sessionsLoaded = true;
@@ -219,8 +222,8 @@ public class Login extends AppCompatActivity {
                     public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                         if (task.isSuccessful()) {
                             userDays = new ArrayList<>();
-                            for(HashMap map : (ArrayList<HashMap<String,String>>)task.getResult().get("days")){
-                                userDays.add((HashMap<String, String>)map);
+                            for (HashMap map : (ArrayList<HashMap<String, String>>) task.getResult().get("days")) {
+                                userDays.add((HashMap<String, String>) map);
                             }
 
                             userContacts = (ArrayList<HashMap<String, String>>) task.getResult().get("contacts");

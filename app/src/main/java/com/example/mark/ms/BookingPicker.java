@@ -46,7 +46,6 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
     private TimePickerDialog mTimePickerDialog;
     private LayoutInflater mInflater;
     private FirebaseFirestore firestore = FirebaseFirestore.getInstance();
-    private Toast instruction;
     private AlertDialog.Builder builder;
     private View dialogView;
     private AlertDialog alertDialog = null;
@@ -69,8 +68,6 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
         builder = new AlertDialog.Builder(mContext);
         builder.setView(dialogView);
         alertDialog = builder.create();
-        instruction = Toast.makeText(mContext, "Choose the date of the session", Toast.LENGTH_SHORT);
-        instruction.setGravity(Gravity.BOTTOM | Gravity.CENTER, 0, 0);
         r = mContext.getResources();
 
         mDatePickerDialog = new DatePickerDialog(mContext,
@@ -90,13 +87,18 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
             }
         });
 
-        mDatePickerDialog.setTitle(null);
+        View dateTitleView = mInflater.inflate(R.layout.date_picker_title,null);
+        mDatePickerDialog.setCustomTitle(dateTitleView);
+
 
 
         mTimePickerDialog = new TimePickerDialog(mContext, R.style.CustomDialogTheme,
                 BookingPicker.this,
                 14, 0,
                 false);
+
+        View timeTitleView = mInflater.inflate(R.layout.time_picker_title,null);
+        mTimePickerDialog.setCustomTitle(timeTitleView);
 
 
         mTimePickerDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "CANCEL", new DialogInterface.OnClickListener() {
@@ -112,7 +114,6 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
 
     public void makeBooking() {
         mDatePickerDialog.show();
-        instruction.show();
     }
 
     @Override
@@ -174,9 +175,6 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
         }
         if (!bookingOnSameDay && !dialogCanceled) {
             mTimePickerDialog.show();
-            instruction.cancel();
-            instruction.setText("Choose start time of session");
-            instruction.show();
         }
     }
 
@@ -219,9 +217,6 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
 
         });
         alertDialog.show();
-        instruction.cancel();
-        instruction.setText("Choose the number of hours of your session");
-        instruction.show();
     }
 
     private void uploadToSchedule() {
@@ -241,6 +236,11 @@ public class BookingPicker implements DatePickerDialog.OnDateSetListener, TimePi
                 break;
             }
         }
+
+        if(Login.upcomingSessions.isEmpty()){
+            Login.upcomingSessions.add((HashMap<String, Object>) docData.clone());
+        }
+
         firestore.collection(r.getString(R.string.SCHEDULE)).add(docData).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
             @Override
             public void onComplete(@NonNull Task<DocumentReference> task) {

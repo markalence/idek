@@ -19,31 +19,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageButton
-        android:id="@+id/dayEditImage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:backgroundTint="@android:color/holo_blue_dark"
-        android:scaleX="1.3"
-        android:scaleY="1.35"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/dayCancelImage"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_mode_edit_white_24dp" />
-
-    <ImageButton
-        android:id="@+id/dayCancelImage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="4dp"
-        android:backgroundTint="@android:color/holo_red_light"
-        android:cropToPadding="true"
-        android:scaleType="centerCrop"
-        android:scaleX="1.35"
-        android:scaleY="1.35"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/session_delete" />
 </android.support.constraint.ConstraintLayout>

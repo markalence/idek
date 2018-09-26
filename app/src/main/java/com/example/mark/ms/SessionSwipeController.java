@@ -9,6 +9,7 @@ import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -56,8 +57,14 @@ public class SessionSwipeController extends ItemTouchHelper.Callback {
 
     SessionSwipeController(Context context, LayoutInflater inflater) {
         mContext = context;
-        deleteIcon = ContextCompat.getDrawable(mContext, R.drawable.session_delete);
-        editIcon = ContextCompat.getDrawable(mContext, R.drawable.ic_mode_edit_white_24dp);
+        if(android.os.Build.VERSION.SDK_INT <= 20){
+            deleteIcon = ContextCompat.getDrawable(mContext,R.drawable.ic_session_delete_old);
+            editIcon = ContextCompat.getDrawable(mContext,R.drawable.ic_session_edit_old);
+        }
+        else {
+            deleteIcon = ContextCompat.getDrawable(mContext, R.drawable.session_delete);
+            editIcon = ContextCompat.getDrawable(mContext, R.drawable.ic_mode_edit_white_24dp);
+        }
         mInflater = inflater;
         r = mContext.getResources();
 
@@ -119,6 +126,7 @@ public class SessionSwipeController extends ItemTouchHelper.Callback {
     public void onSwiped(final RecyclerView.ViewHolder viewHolder, int direction) {
 
         sessionCopy = (HashMap<String, Object>) Login.upcomingSessions.get(viewHolder.getAdapterPosition()).clone();
+        sessionCopy.remove("id");
 
         if (direction == RIGHT) {
 
@@ -127,6 +135,7 @@ public class SessionSwipeController extends ItemTouchHelper.Callback {
             final SessionAdapter sessionAdapter = (SessionAdapter) SessionActivity.recyclerView.getAdapter();
             final int copyPosition = viewHolder.getAdapterPosition();
             final HashMap<String, Object> copyMap = sessionAdapter.mDataset.get(copyPosition);
+            copyMap.remove("id");
 
             final Snackbar snackbar = Snackbar
                     .make(SessionActivity.sessionView, "Session canceled.", Snackbar.LENGTH_LONG);
@@ -134,7 +143,7 @@ public class SessionSwipeController extends ItemTouchHelper.Callback {
                 @Override
                 public void onClick(View view) {
                     if (clickable) {
-                        sessionAdapter.mDataset.add(copyPosition, copyMap);
+                        Login.upcomingSessions.add(copyPosition, copyMap);
                         sessionAdapter.notifyItemInserted(copyPosition);
                         clickable = false;
                         firestore.collection("schedule")
@@ -142,6 +151,8 @@ public class SessionSwipeController extends ItemTouchHelper.Callback {
                             @Override
                             public void onComplete(@NonNull Task<DocumentReference> task) {
                                 if (task.isSuccessful()) {
+
+                                    Login.upcomingSessions.get(copyPosition).put("id", task.getResult().getId());
 
                                 } else {
                                     Toast.makeText(sessionAdapter.mContext, "Couldn't re-add session at this time", Toast.LENGTH_SHORT).show();
@@ -155,9 +166,8 @@ public class SessionSwipeController extends ItemTouchHelper.Callback {
             snackbar.setActionTextColor(Color.rgb(25, 172, 172));
 
             if (viewHolder.getAdapterPosition() != -1) {
-                sessionAdapter.mDataset.remove(copyPosition);
-                sessionAdapter.notifyItemRemoved(copyPosition);
-
+                ((SessionAdapter) SessionActivity.recyclerView.getAdapter()).mDataset.remove(copyPosition);
+                ((SessionAdapter) SessionActivity.recyclerView.getAdapter()).notifyItemRemoved(copyPosition);
                 Query query = firestore.collection("schedule")
                         .whereEqualTo("username", copyMap.get("username"))
                         .whereEqualTo("date", copyMap.get("date"));
@@ -189,16 +199,15 @@ public class SessionSwipeController extends ItemTouchHelper.Callback {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             Spinner timeSpinner = dialogView.findViewById(R.id.timeSpinner);
             Spinner hourSpinner = dialogView.findViewById(R.id.hourSpinner);
+
             final int index = viewHolder.getAdapterPosition();
-            final String docId = (String) Login.upcomingSessions.get(index).get("id");
-            Login.upcomingSessions.get(index).remove("id");
-            Timestamp initialTimestamp = (Timestamp) Login.upcomingSessions.get(index).get("date");
+            final Timestamp initialTimestamp = (Timestamp) Login.upcomingSessions.get(index).get("date");
             Date initialDate = initialTimestamp.toDate();
+
+            final HashMap<String,Object> copyDay = (HashMap<String, Object>) Login.upcomingSessions.get(index).clone();
 
             String initialDateString = sdf.format(initialDate);
             final String initialDay = initialDateString.split(":")[0];
-            String initialHours = initialDateString.split(":")[1];
-            String initialMinutes = initialDateString.split(":")[2];
 
             timeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
@@ -211,7 +220,7 @@ public class SessionSwipeController extends ItemTouchHelper.Callback {
                     Date newDate = sdf.parse(newDateString, parse);
                     Timestamp newTimestamp = new Timestamp(newDate);
 
-                    Login.upcomingSessions.get(index).put("date", newTimestamp);
+                    copyDay.put("date", newTimestamp);
 
                 }
 
@@ -231,20 +240,19 @@ public class SessionSwipeController extends ItemTouchHelper.Callback {
 
                 }
             });
-
             hourSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
 
-                    Login.upcomingSessions.get(index).put("hours", parent.getItemAtPosition(position));
+                    copyDay.put("hours", parent.getItemAtPosition(position));
 
                 }
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parent) {
                     int position = 0;
-                    Login.upcomingSessions.get(index).put("hours", parent.getItemAtPosition(position));
+                   copyDay.put("hours", parent.getItemAtPosition(position));
                 }
             });
 
@@ -253,10 +261,25 @@ public class SessionSwipeController extends ItemTouchHelper.Callback {
                 @Override
                 public void onClick(View v) {
                     dialog.dismiss();
-                    firestore.collection(r.getString(R.string.SCHEDULE)).document(docId)
-                            .update(Login.upcomingSessions.get(index));
+                    Login.upcomingSessions.get(index).clear();
+                    Login.upcomingSessions.get(index).putAll(copyDay);
+                    firestore.collection(r.getString(R.string.SCHEDULE))
+                            .whereEqualTo(r.getString(R.string.USERNAME), Login.username)
+                            .whereEqualTo(r.getString(R.string.DATE), initialTimestamp)
+                            .get(Source.SERVER)
+                            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                    for (int i = 0; i < task.getResult().size(); ++i) {
+                                        if (i == 0) {
+                                            firestore.collection(r.getString(R.string.SCHEDULE))
+                                                    .document(task.getResult().getDocuments().get(0).getId())
+                                                    .update(Login.upcomingSessions.get(index));
+                                        }
+                                    }
+                                }
+                            });
                     SessionActivity.sessionAdapter.notifyItemChanged(index);
-                    Login.upcomingSessions.get(index).put("id", docId);
                 }
             });
 
@@ -266,9 +289,7 @@ public class SessionSwipeController extends ItemTouchHelper.Callback {
                 public void onClick(View v) {
                     dialog.dismiss();
                     SessionActivity.sessionAdapter.notifyItemChanged(index);
-                    Login.upcomingSessions.get(index).put("id", docId);
                     Login.upcomingSessions.get(index).put(r.getString(R.string.HOURS), sessionCopy.get(r.getString(R.string.HOURS)));
-                    Login.upcomingSessions.get(index).put("time", sessionCopy.get("time"));
 
                 }
             });

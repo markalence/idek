@@ -48,8 +48,6 @@ public class BookingRecorder implements OnDateSetListener {
     private LayoutInflater mInflater;
     private DatePickerDialog mDatePickerDialog;
     private FirebaseFirestore firestore = FirebaseFirestore.getInstance();
-    private Toast dateInstruction;
-    private Toast hourInstruction;
     private AlertDialog recordDialog;
     private View pickerView;
     private Resources r;
@@ -82,11 +80,8 @@ public class BookingRecorder implements OnDateSetListener {
 
         pickerView = mInflater.inflate(R.layout.booking_hours, null);
 
-        dateInstruction = Toast.makeText(mContext, "Choose the date of your session.", Toast.LENGTH_SHORT);
-        dateInstruction.setGravity(Gravity.BOTTOM | Gravity.CENTER, 0, 0);
-
-        hourInstruction = Toast.makeText(mContext, "Length of session (hours)", Toast.LENGTH_SHORT);
-        hourInstruction.setGravity(Gravity.BOTTOM | Gravity.CENTER, 0, 0);
+        View dateTitleView = mInflater.inflate(R.layout.date_picker_title,null);
+        mDatePickerDialog.setCustomTitle(dateTitleView);
 
         final AlertDialog.Builder recordBuilder = new AlertDialog.Builder(mContext);
         setNumberPicker(pickerView);
@@ -96,7 +91,6 @@ public class BookingRecorder implements OnDateSetListener {
 
     public void recordBooking() {
         mDatePickerDialog.show();
-        dateInstruction.show();
     }
 
     @Override
@@ -149,7 +143,6 @@ public class BookingRecorder implements OnDateSetListener {
 
     public void numberPickerInit() {
 
-        hourInstruction.show();
         final View moduleView = mInflater.inflate(R.layout.record_module, null);
         final Button hourCancel = pickerView.findViewById(R.id.hourCancel);
         final Button hourConfirm = pickerView.findViewById(R.id.hourConfirm);

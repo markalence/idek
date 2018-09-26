@@ -93,7 +93,7 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
     }
 
     @Override
-    public void onBindViewHolder(@NonNull final SessionAdapter.ViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull final SessionAdapter.ViewHolder holder, int position) {
 
         holder.side = "front";
         holder.sessionLayout.setBackgroundResource(R.drawable.bottomline);
@@ -105,7 +105,7 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
         holder.sessionInfo.setText(dateStringLong + " for " + hourString);
         holder.documentId = (String) mDataset.get(position).get("docId");
         final String dateStringShort = simpleDateFormatShort.format(dateRecord);
-        showFrontOfDrawable(holder,position,dateStringShort);
+        showFrontOfDrawable(holder,holder.getAdapterPosition(),dateStringShort);
 
         final TextDrawable drawableFront = TextDrawable.builder()
                 .beginConfig()
@@ -131,11 +131,11 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
                         super.onAnimationEnd(animation);
                         if (holder.side.equals("front")) {
 
-                            showBackOfDrawable(holder, position);
+                            showBackOfDrawable(holder, holder.getAdapterPosition());
 
                         } else {
 
-                            showFrontOfDrawable(holder, position, dateStringShort);
+                            showFrontOfDrawable(holder, holder.getAdapterPosition(), dateStringShort);
 
                         }
                         oa2.start();
@@ -174,7 +174,6 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
 
         copyDataset = (ArrayList<HashMap<String,Object>>) mDataset.clone();
         for (int i = 0; i < selectedItems.size(); ++i) {
-
             Query deleteQuery = firestore.collection(r.getString(R.string.SCHEDULE))
                     .whereEqualTo(r.getString(R.string.USERNAME), selectedItems.get(i).get(r.getString(R.string.USERNAME)))
                     .whereEqualTo(r.getString(R.string.DATE), selectedItems.get(i).get(r.getString(R.string.DATE)));
@@ -184,7 +183,6 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
             indexList.add(index);
             int a = mDataset.indexOf(selectedItems.get(i));
             mDataset.remove(selectedItems.get(i));
-            mDataset.indexOf(selectedItems.get(i));
             notifyItemRemoved(a);
 
             deleteQuery.get(Source.SERVER)
@@ -203,8 +201,6 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.ViewHold
                     });
 
         }
-
-
         selectedItems.clear();
         SessionActivity.toolbarTitle.setVisibility(View.VISIBLE);
         SessionActivity.toolbar.setBackgroundColor(Color.rgb(25, 205, 205));

@@ -1,15 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.mark.ms">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:ignore="GoogleAppIndexingWarning">
+        <service android:name=".Service.FirebaseIDService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".NotificationReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
         <activity
             android:name=".Login"
             android:theme="@style/MS">
@@ -30,7 +45,20 @@
         <activity
             android:name=".MyProfileActivity"
             android:label="@string/title_activity_my_profile"
-            android:theme="@style/AppTheme"></activity>
+            android:theme="@style/AppTheme" />
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher_round" />
+        <!-- Set color used with incoming notification messages. This is used when no color is set for the incoming notification message. -->
+
+        <activity
+            android:name=".Service.RecordSheetDialog"
+            android:label="@string/title_activity_record_sheet_dialog"
+            android:theme="@style/NoTitleDialog"
+            android:launchMode="singleInstance"
+            android:excludeFromRecents="true"
+            tools:ignore="InnerclassSeparator"></activity>
     </application>
 
 </manifest>

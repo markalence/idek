@@ -41,16 +41,16 @@
             app:layout_constraintTop_toBottomOf="@+id/appbar">
 
             <android.support.design.widget.TabItem
-                android:id="@+id/record_sheet"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="My Days" />
-
-            <android.support.design.widget.TabItem
-                android:id="@+id/schedule"
+                android:id="@+id/contactInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Contact Info" />
+
+            <android.support.design.widget.TabItem
+                android:id="@+id/myDays"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="My Days" />
 
         </android.support.design.widget.TabLayout>
 

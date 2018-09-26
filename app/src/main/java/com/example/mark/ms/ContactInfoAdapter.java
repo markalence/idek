@@ -1,5 +1,6 @@
 package com.example.mark.ms;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -14,6 +15,8 @@ import java.util.HashMap;
 public class ContactInfoAdapter extends RecyclerView.Adapter<ContactInfoAdapter.ViewHolder> {
 
     ArrayList<HashMap<String,String>> mDataset;
+    public Context mContext;
+
 
 
     @NonNull
@@ -49,7 +52,7 @@ public class ContactInfoAdapter extends RecyclerView.Adapter<ContactInfoAdapter.
         }
 
         public void setItem(int position){
-
+            System.out.println(Login.userContacts);
             String description = Login
                     .userContacts
                     .get(position)

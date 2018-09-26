@@ -15,7 +15,7 @@
 
     <style name="AppTheme.AppBarOverlay" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowActionBar">false</item>
-        <item name = "android:windowNoTitle">true</item>
+        <item name="android:windowNoTitle">true</item>
     </style>
 
     <style name="AppTheme.Picker" parent="Theme.AppCompat.Light.NoActionBar">
@@ -33,6 +33,9 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="NoTitleDialog" parent="@style/Theme.AppCompat.Dialog.Alert">
+        <item name="windowNoTitle">true</item>
+    </style>
 
     <style name="CustomDialogTheme" parent="android:Theme.DeviceDefault.Light.Dialog" />
 

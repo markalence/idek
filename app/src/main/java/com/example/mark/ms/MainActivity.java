@@ -1,10 +1,15 @@
 package com.example.mark.ms;
 
 import android.annotation.SuppressLint;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.SyncStateContract;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -19,6 +24,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mark.ms.Service.MyNotificationManager;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.squareup.picasso.Picasso;
 
 import java.util.concurrent.ExecutorService;
@@ -44,6 +51,27 @@ public class MainActivity extends AppCompatActivity
         setRecyclerView();
         view = findViewById(android.R.id.content);
         r = getBaseContext().getResources();
+        System.out.println(FirebaseInstanceId.getInstance().getId() + "     ID");
+
+        /*if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationManager mNotificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel mChannel = new NotificationChannel("scaance", "some ass", importance);
+            mChannel.setDescription("good app");
+            mChannel.enableLights(true);
+            mChannel.setLightColor(Color.RED);
+            mChannel.enableVibration(true);
+            mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
+            mNotificationManager.createNotificationChannel(mChannel);
+        }
+
+        *//*
+         * Displaying a notification locally
+         *//*
+        MyNotificationManager.getInstance(this).displayNotification("Greetings", "Hello how are you?");*/
+
+
     }
 
     public void setRecyclerView() {
