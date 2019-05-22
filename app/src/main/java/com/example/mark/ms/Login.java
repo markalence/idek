@@ -208,7 +208,7 @@ public class Login extends AppCompatActivity {
                         startActivity(intent);
                     }
                 } else {
-                    Toast.makeText(getBaseContext(), "Could not connect", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getBaseContext(), "Could not connect. Check internet connection", Toast.LENGTH_SHORT).show();
                     System.out.println(task.getException());
                 }
             }

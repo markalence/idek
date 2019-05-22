@@ -53,6 +53,8 @@ public class MainActivity extends AppCompatActivity
         r = getBaseContext().getResources();
         System.out.println(FirebaseInstanceId.getInstance().getId() + "     ID");
 
+        //rara
+
         /*if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             NotificationManager mNotificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
