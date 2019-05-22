@@ -33,7 +33,6 @@ public class RecordSheetDialog extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        System.out.println("AWEEEEE MAAA");
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_record_sheet_dialog);
@@ -72,6 +71,7 @@ public class RecordSheetDialog extends AppCompatActivity {
                     NotificationManager mNotificationManager = (NotificationManager)
                             getSystemService(Context.NOTIFICATION_SERVICE);
                     mNotificationManager.cancel(1);
+                    mNotificationManager.cancel(2);
                     finish();
                 }
             }

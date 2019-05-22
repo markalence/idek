@@ -13,6 +13,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.RemoteInput;
 
+import com.example.mark.ms.Service.FirebaseIDService;
 import com.example.mark.ms.Service.RecordSheetDialog;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -25,57 +26,73 @@ import java.util.HashMap;
 public class NotificationReceiver extends BroadcastReceiver {
 
     FirebaseFirestore firestore = FirebaseFirestore.getInstance();
-    String firstName, lastName, username, grade;
+    String firstName, lastName, username, grade, hours;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
 
         //if there is some input
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 
-            CharSequence name = remoteInput.getCharSequence("key_text_reply");
-            System.out.println(name);
-            SharedPreferences mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            String userData = mSharedPreferences.getString("userData", "empty");
-            HashMap<String, Object> map = new HashMap<>();
-            JSONObject j = null;
+        if(remoteInput.containsKey("recordhours")){
+            FirebaseIDService.notificationBuilder
+                    .setContentText(remoteInput.get("recordhours").toString() + " hours");
             try {
-                j = new JSONObject(userData);
-                Resources r = context.getResources();
-                firstName = j.getString(r.getString(R.string.FIRST_NAME));
-                lastName = j.getString(r.getString(R.string.LAST_NAME));
-                grade = j.getString(r.getString(R.string.GRADE));
-                username = j.getString(r.getString(R.string.USERNAME));
+                FirebaseIDService.j.put("hours", remoteInput.get("recordhours").toString());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
-
-            map.put("module", (String) name);
-            map.put("username", username);
-            map.put("lastName", lastName);
-            map.put("grade", grade);
-            map.put("hours", 2);
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(Calendar.HOUR_OF_DAY, 12);
-            calendar.set(Calendar.MINUTE, 0);
-            calendar.set(Calendar.SECOND, 0);
-            calendar.set(Calendar.MILLISECOND, 0);
-            map.put("date", calendar.getTime());
-            firestore.collection("test").add(map);
+            Notification notification = FirebaseIDService.notificationBuilder.build();
+            notification.flags = Notification.FLAG_ONGOING_EVENT;
             NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            mNotificationManager.cancel(0);
+            mNotificationManager.notify(0,notification);
 
-        } else {
+        }
 
-            NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            mNotificationManager.cancel(1);
-            Intent nIntent = new Intent(context, RecordSheetDialog.class);
-            nIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            nIntent.putExtra("documentData", intent.getExtras().get("documentData").toString());
-            context.startActivity(nIntent);
+        else {
 
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+
+                CharSequence name = remoteInput.getCharSequence("recordmodule");
+                System.out.println(name);
+                HashMap<String, Object> map = new HashMap<>();
+                JSONObject j = null;
+                try {
+                    Resources r = context.getResources();
+                    firstName = FirebaseIDService.j.getString(r.getString(R.string.FIRST_NAME));
+                    lastName = FirebaseIDService.j.getString(r.getString(R.string.LAST_NAME));
+                    username = FirebaseIDService.j.getString(r.getString(R.string.USERNAME));
+                    hours = FirebaseIDService.j.getString(r.getString(R.string.HOURS));
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                map.put("module", name);
+                map.put("firstName",firstName);
+                map.put("username", username);
+                map.put("lastName", lastName);
+                map.put("hours", hours);
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(Calendar.HOUR_OF_DAY, 12);
+                calendar.set(Calendar.MINUTE, 0);
+                calendar.set(Calendar.SECOND, 0);
+                calendar.set(Calendar.MILLISECOND, 0);
+                map.put("date", calendar.getTime());
+                firestore.collection("test").add(map);
+                NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                mNotificationManager.cancel(0);
+
+            } else {
+
+                NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                mNotificationManager.cancel(1);
+                Intent nIntent = new Intent(context, RecordSheetDialog.class);
+                nIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                nIntent.putExtra("documentData", intent.getExtras().get("documentData").toString());
+                context.startActivity(nIntent);
+
+            }
         }
 
     }
